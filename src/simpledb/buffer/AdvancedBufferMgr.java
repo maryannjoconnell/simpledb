@@ -30,6 +30,7 @@ public class AdvancedBufferMgr {
         numAvailable = numbuffs;
         for (int i=0; i<numbuffs; i++)
             bufferpool[i] = new Buffer();
+        // CS4432-Project1: initialize the new variabled
         emptyPool = new BitSet(numbuffs);
         blockPosition = new HashMap();
     }
@@ -60,6 +61,7 @@ public class AdvancedBufferMgr {
             if (buff == null)
                 return null;
             buff.assignToBlock(blk);
+            // CS4432-Project1: add the block to the hashmap
             blockPosition.put(blk, buff);
         }
         if (!buff.isPinned())
@@ -82,6 +84,7 @@ public class AdvancedBufferMgr {
         if (buff == null)
             return null;
         buff.assignToNew(filename, fmtr);
+        // CS4432-Project1: add the block to the hashmap
         blockPosition.put(buff.block(), buff);
         numAvailable--;
         buff.pin();
@@ -106,13 +109,14 @@ public class AdvancedBufferMgr {
         return numAvailable;
     }
 
+    // CS4432-Project1:
     // finds an empty buffer (one with no data)
     // NOTE: also sets the buffer as non-empty in the bitset because
     // 1. the functions calling this function does not know (or care)
     // where the buffer is
     // 2. the functions calling this function WILL use the buffer
     // if this is not good design we can use a hashmap that maps a buffer to
-    // its index in the pool (which could actually be useful elsewhere)
+    // its index in the pool (which could actually be useful elsewhere
     private synchronized Buffer findEmptyBuffer() {
         int i = emptyPool.nextClearBit(0);
         if (i < bufferpool.length) {
@@ -123,6 +127,7 @@ public class AdvancedBufferMgr {
             return null;
     }
     private Buffer findExistingBuffer(Block blk) {
+        // CS4432-Project1: find blocks from a hashmap
         return blockPosition.get(blk);
         /*
         for (Buffer buff : bufferpool) {
@@ -135,9 +140,10 @@ public class AdvancedBufferMgr {
     }
 
     private Buffer chooseUnpinnedBuffer() {
+        // CS4432-Project1: find empty blocks using the above function
         Buffer b = findEmptyBuffer();
         if (b != null) return b;
-        // no empty buffers, begin pin replacement policy)
+        // no empty buffers, begin pin replacement policy
         for (Buffer buff : bufferpool)
             if (!buff.isPinned())
                 return buff;
