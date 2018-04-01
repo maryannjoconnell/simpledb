@@ -5,6 +5,7 @@ import simpledb.file.Block;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class AdvancedBufferMgr {
     protected Buffer[] bufferpool;
@@ -30,9 +31,9 @@ public class AdvancedBufferMgr {
         numAvailable = numbuffs;
         for (int i=0; i<numbuffs; i++)
             bufferpool[i] = new Buffer();
-        // CS4432-Project1: initialize the new variabled
+        // CS4432-Project1: initialize the new variables
         emptyPool = new BitSet(numbuffs);
-        blockPosition = new HashMap();
+        blockPosition = new ConcurrentHashMap();
     }
 
     /**
@@ -60,6 +61,7 @@ public class AdvancedBufferMgr {
             buff = chooseUnpinnedBuffer();
             if (buff == null)
                 return null;
+            if (buff.block() != null) blockPosition.remove(buff.block());
             buff.assignToBlock(blk);
             // CS4432-Project1: add the block to the hashmap
             blockPosition.put(blk, buff);
@@ -83,6 +85,7 @@ public class AdvancedBufferMgr {
         Buffer buff = chooseUnpinnedBuffer();
         if (buff == null)
             return null;
+        if (buff.block() != null) blockPosition.remove(buff.block());
         buff.assignToNew(filename, fmtr);
         // CS4432-Project1: add the block to the hashmap
         blockPosition.put(buff.block(), buff);
