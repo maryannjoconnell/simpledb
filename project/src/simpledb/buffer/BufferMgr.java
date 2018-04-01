@@ -38,7 +38,7 @@ public class BufferMgr {
    public BufferMgr(int numbuffers) {
       bufferMgr = new BasicBufferMgr(numbuffers);
    }
-   
+
    /**
     * Pins a buffer to the specified block, potentially
     * waiting until a buffer becomes available.
