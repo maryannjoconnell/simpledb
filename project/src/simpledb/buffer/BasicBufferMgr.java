@@ -7,7 +7,8 @@ import simpledb.file.*;
  * @author Edward Sciore
  *
  */
-class BasicBufferMgr {
+// CS4432-Project1: Changed to inherit from abstract class
+class BasicBufferMgr extends AbstractBufferMgr<Buffer> {
    private Buffer[] bufferpool;
    private int numAvailable;
    
@@ -35,10 +36,9 @@ class BasicBufferMgr {
     * Flushes the dirty buffers modified by the specified transaction.
     * @param txnum the transaction's id number
     */
-   synchronized void flushAll(int txnum) {
-      for (Buffer buff : bufferpool)
-         if (buff.isModifiedBy(txnum))
-         buff.flush();
+   // CS4432-Project1: Access changed from package-private to public to enforce method with interface
+   public synchronized void flushAll(int txnum) {
+      super.flushAll(txnum, bufferpool);
    }
    
    /**
@@ -50,7 +50,8 @@ class BasicBufferMgr {
     * @param blk a reference to a disk block
     * @return the pinned buffer
     */
-   synchronized Buffer pin(Block blk) {
+   // CS4432-Project1: Access changed from package-private to public to enforce method with interface
+   public synchronized Buffer pin(Block blk) {
       Buffer buff = findExistingBuffer(blk);
       if (buff == null) {
          buff = chooseUnpinnedBuffer();
@@ -73,7 +74,8 @@ class BasicBufferMgr {
     * @param fmtr a pageformatter object, used to format the new block
     * @return the pinned buffer
     */
-   synchronized Buffer pinNew(String filename, PageFormatter fmtr) {
+   // CS4432-Project1: Access changed from package-private to public to enforce method with interface
+   public synchronized Buffer pinNew(String filename, PageFormatter fmtr) {
       Buffer buff = chooseUnpinnedBuffer();
       if (buff == null)
          return null;
@@ -87,7 +89,8 @@ class BasicBufferMgr {
     * Unpins the specified buffer.
     * @param buff the buffer to be unpinned
     */
-   synchronized void unpin(Buffer buff) {
+   // CS4432-Project1: Access changed from package-private to public to enforce method with interface
+   public synchronized void unpin(Buffer buff) {
       buff.unpin();
       if (!buff.isPinned())
          numAvailable++;
@@ -97,7 +100,8 @@ class BasicBufferMgr {
     * Returns the number of available (i.e. unpinned) buffers.
     * @return the number of available buffers
     */
-   int available() {
+   // CS4432-Project1: Access changed from package-private to public to enforce method with interface
+   public int available() {
       return numAvailable;
    }
    
