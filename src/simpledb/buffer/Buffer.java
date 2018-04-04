@@ -3,6 +3,8 @@ package simpledb.buffer;
 import simpledb.server.SimpleDB;
 import simpledb.file.*;
 
+import java.time.Instant;
+
 /**
  * An individual buffer.
  * A buffer wraps a page and stores information about its status,
@@ -13,13 +15,18 @@ import simpledb.file.*;
  * the LSN of the corresponding log record.
  * @author Edward Sciore
  */
-public class Buffer {
+public class Buffer implements Observable {
    private Page contents = new Page();
    private Block blk = null;
    private int pins = 0;
    private int modifiedBy = -1;  // negative means not modified
    private int logSequenceNumber = -1; // negative means no corresponding log record
-
+   // CS4432-Project1: metadata for lru replacement policy; null indicates unused field
+   private Instant lastUsed = null;
+   // CS4432-Project1: metadata for clock replacement policy; negative one indicates unused field
+   private int refBit= -1;
+   // CS4432-Project1: buffer manager responsible for maintaining data structures for replacement policies
+   private Observer observer;
    /**
     * Creates a new buffer, wrapping a new 
     * {@link simpledb.file.Page page}.  
@@ -33,8 +40,12 @@ public class Buffer {
     * Thus this constructor cannot be called until 
     * {@link simpledb.server.SimpleDB#initFileAndLogMgr(String)} or
     * is called first.
+    * @param o Observer to notify of changes or accesses
     */
-   public Buffer() {}
+   // CS4432-Project1: Modified construct to accept observer
+   public Buffer(Observer o) {
+      observer = o;
+   }
    
    /**
     * Returns the integer value at the specified offset of the
@@ -45,6 +56,8 @@ public class Buffer {
     * @return the integer value at that offset
     */
    public int getInt(int offset) {
+      // CS4432-Project1: notify buffer manager about access
+      notifyObserver();
       return contents.getInt(offset);
    }
 
@@ -57,6 +70,7 @@ public class Buffer {
     * @return the string value at that offset
     */
    public String getString(int offset) {
+      notifyObserver();
       return contents.getString(offset);
    }
 
@@ -79,6 +93,7 @@ public class Buffer {
       if (lsn >= 0)
 	      logSequenceNumber = lsn;
       contents.setInt(offset, val);
+      notifyObserver();
    }
 
    /**
@@ -100,6 +115,7 @@ public class Buffer {
       if (lsn >= 0)
 	      logSequenceNumber = lsn;
       contents.setString(offset, val);
+      notifyObserver();
    }
 
    /**
@@ -131,6 +147,7 @@ public class Buffer {
     */
    void pin() {
       pins++;
+      notifyObserver();
    }
 
    /**
@@ -138,6 +155,7 @@ public class Buffer {
     */
    void unpin() {
       pins--;
+      notifyObserver();
    }
 
    /**
@@ -186,5 +204,39 @@ public class Buffer {
       fmtr.format(contents);
       blk = contents.append(filename);
       pins = 0;
+   }
+
+   public Instant getLastUsed() {
+      return lastUsed;
+   }
+
+   public void setLastUsed(Instant lastUsed) {
+      this.lastUsed = lastUsed;
+   }
+
+   public int getRefBit() {
+      return refBit;
+   }
+
+   public void setRefBit(int refBit) {
+      this.refBit = refBit;
+   }
+
+   @Override
+   public String toString() {
+      String lastUsedStr = lastUsed != null ? ", lastUsed=" + getLastUsed().toString() : "";
+      String refBitStr = refBit >= 0 ? ", refBit=" + refBit : "";
+      return "Buffer{" +
+            "id=" + this.hashCode() +
+            "blk=" + blk +
+            ", pins=" + pins +
+            lastUsedStr +
+            refBitStr +
+            '}';
+   }
+
+   @Override
+   public void notifyObserver() {
+      observer.update(this);
    }
 }

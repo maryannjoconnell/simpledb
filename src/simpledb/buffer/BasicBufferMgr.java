@@ -2,16 +2,23 @@ package simpledb.buffer;
 
 import simpledb.file.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
+import static simpledb.buffer.ReplacementPolicy.DEFAULT;
+
 /**
  * Manages the pinning and unpinning of buffers to blocks.
  * @author Edward Sciore
  *
  */
-class BasicBufferMgr {
+class BasicBufferMgr implements Observer {
    private Buffer[] bufferpool;
-   private int numAvailable;
+   private ArrayList<Observable> observableList; // CS4432-Project1: List of observable buffers
+   private ReplacementPolicy policy; // CS4432-Project1: Replacement policy enum
    
    /**
+    * CS4432-Project1:
     * Creates a buffer manager having the specified number 
     * of buffer slots.
     * This constructor depends on both the {@link FileMgr} and
@@ -23,12 +30,24 @@ class BasicBufferMgr {
     * {@link simpledb.server.SimpleDB#initFileAndLogMgr(String)} or
     * is called first.
     * @param numbuffs the number of buffer slots to allocate
+    * @param replacementPolicy replacement policy to use
     */
-   BasicBufferMgr(int numbuffs) {
+   BasicBufferMgr(int numbuffs, String replacementPolicy) {
+      if (replacementPolicy == null || replacementPolicy.isEmpty()) {
+         policy = DEFAULT;
+      } else {
+         policy = Arrays.stream(ReplacementPolicy.values()).filter(p -> p.name().equalsIgnoreCase(replacementPolicy))
+               .findFirst().orElse(DEFAULT);
+      }
+
       bufferpool = new Buffer[numbuffs];
-      numAvailable = numbuffs;
-      for (int i=0; i<numbuffs; i++)
-         bufferpool[i] = new Buffer();
+      for (int i=0; i<numbuffs; i++) {
+         Buffer buff = new Buffer(this);
+         bufferpool[i] = buff;
+         observableList.add(buff);
+      }
+
+      policy.getStrategy().initStrategyFields(numbuffs, bufferpool);
    }
    
    /**
@@ -38,7 +57,7 @@ class BasicBufferMgr {
    synchronized void flushAll(int txnum) {
       for (Buffer buff : bufferpool)
          if (buff.isModifiedBy(txnum))
-         buff.flush();
+            buff.flush();
    }
    
    /**
@@ -52,16 +71,7 @@ class BasicBufferMgr {
     */
    synchronized Buffer pin(Block blk) {
       Buffer buff = findExistingBuffer(blk);
-      if (buff == null) {
-         buff = chooseUnpinnedBuffer();
-         if (buff == null)
-            return null;
-         buff.assignToBlock(blk);
-      }
-      if (!buff.isPinned())
-         numAvailable--;
-      buff.pin();
-      return buff;
+      return policy.getStrategy().pin(blk, buff);
    }
    
    /**
@@ -73,24 +83,18 @@ class BasicBufferMgr {
     * @param fmtr a pageformatter object, used to format the new block
     * @return the pinned buffer
     */
-   synchronized Buffer pinNew(String filename, PageFormatter fmtr) {
-      Buffer buff = chooseUnpinnedBuffer();
-      if (buff == null)
-         return null;
-      buff.assignToNew(filename, fmtr);
-      numAvailable--;
-      buff.pin();
-      return buff;
+   // CS4432-Project1: Access changed from package-private to public to enforce method with interface
+   public synchronized Buffer pinNew(String filename, PageFormatter fmtr) {
+      return policy.getStrategy().pinNew(filename, fmtr);
    }
    
    /**
     * Unpins the specified buffer.
     * @param buff the buffer to be unpinned
     */
-   synchronized void unpin(Buffer buff) {
-      buff.unpin();
-      if (!buff.isPinned())
-         numAvailable++;
+   // CS4432-Project1: Access changed from package-private to public to enforce method with interface
+   public synchronized void unpin(Buffer buff) {
+      policy.getStrategy().unpin(buff);
    }
    
    /**
@@ -98,7 +102,12 @@ class BasicBufferMgr {
     * @return the number of available buffers
     */
    int available() {
-      return numAvailable;
+       return policy.getStrategy().available();
+   }
+
+   @Override
+   public void update(Buffer buff) {
+      policy.getStrategy().update(buff);
    }
    
    private Buffer findExistingBuffer(Block blk) {
@@ -109,11 +118,12 @@ class BasicBufferMgr {
       }
       return null;
    }
-   
-   private Buffer chooseUnpinnedBuffer() {
-      for (Buffer buff : bufferpool)
-         if (!buff.isPinned())
-         return buff;
-      return null;
+
+   @Override
+   public String toString() {
+      return "BasicBufferMgr{" +
+            "bufferpool=" + Arrays.toString(bufferpool) +
+            ", policy=" + policy.getDisplayName() +
+            '}';
    }
 }

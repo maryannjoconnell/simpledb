@@ -20,8 +20,8 @@ import simpledb.file.*;
  */
 public class BufferMgr {
    private static final long MAX_TIME = 10000; // 10 seconds
-   private AdvancedBufferMgr bufferMgr;
-   
+   private BasicBufferMgr bufferMgr;
+
    /**
     * Creates a new buffer manager having the specified 
     * number of buffers.
@@ -34,11 +34,12 @@ public class BufferMgr {
     * {@link simpledb.server.SimpleDB#initFileAndLogMgr(String)} or
     * is called first.
     * @param numbuffers the number of buffer slots to allocate
+    * @param replacementPolicy CS4432-Project1: replacement policy to use
     */
-   public BufferMgr(int numbuffers) {
-      bufferMgr = new AdvancedBufferMgr(numbuffers);
+   public BufferMgr(int numbuffers, String replacementPolicy) {
+      bufferMgr = new BasicBufferMgr(numbuffers, replacementPolicy);
    }
-   
+
    /**
     * Pins a buffer to the specified block, potentially
     * waiting until a buffer becomes available.
@@ -120,5 +121,12 @@ public class BufferMgr {
    
    private boolean waitingTooLong(long starttime) {
       return System.currentTimeMillis() - starttime > MAX_TIME;
+   }
+
+   @Override
+   public String toString() {
+      return "BufferMgr{" +
+            "bufferMgr=" + bufferMgr +
+            '}';
    }
 }
