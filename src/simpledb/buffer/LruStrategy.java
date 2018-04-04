@@ -23,7 +23,7 @@ class LruStrategy implements ReplacementStrategy {
     * @param blk a reference to a disk block
     * @return the pinned buffer
     */
-   public synchronized Buffer pin(Block blk, Buffer buff) {
+   public synchronized Buffer getBufferToPin(Block blk, Buffer buff) {
       if (buff == null) {
          // CS4432-Project1: Get least recently used unpinned buffer and remove from queue
          buff = unpinnedBufferPool.poll();
@@ -31,7 +31,6 @@ class LruStrategy implements ReplacementStrategy {
             return null;
          buff.assignToBlock(blk);
       }
-      buff.pin();
       return buff;
    }
 
@@ -44,22 +43,17 @@ class LruStrategy implements ReplacementStrategy {
     * @param fmtr a pageformatter object, used to format the new block
     * @return the pinned buffer
     */
-   public synchronized Buffer pinNew(String filename, PageFormatter fmtr) {
+   public synchronized Buffer getBufferToPinNew(String filename, PageFormatter fmtr) {
       // CS4432-Project1: Get least recently used unpinned buffer and remove from queue
       Buffer buff = unpinnedBufferPool.poll();
       if (buff == null)
          return null;
       buff.assignToNew(filename, fmtr);
-      buff.pin();
       return buff;
    }
 
-   /**
-    * Unpins the specified buffer.
-    * @param buff the buffer to be unpinned
-    */
-   public synchronized void unpin(Buffer buff) {
-      buff.unpin();
+   public synchronized void updateAvailable(Buffer buff) {
+      // CS4432-Project1: Do nothing; number of unpinned buffers is tracked by priority queue
    }
 
    /**

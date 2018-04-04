@@ -6,8 +6,8 @@ import simpledb.file.*;
  * The publicly-accessible buffer manager.
  * A buffer manager wraps a basic buffer manager, and
  * provides the same methods. The difference is that
- * the methods {@link #pin(Block) pin} and 
- * {@link #pinNew(String, PageFormatter) pinNew}
+ * the methods {@link #pin(Block) getBufferToPin} and
+ * {@link #pinNew(String, PageFormatter) getBufferToPinNew}
  * will never return null.
  * If no buffers are currently available, then the
  * calling thread will be placed on a waiting list.
@@ -93,7 +93,7 @@ public class BufferMgr {
    
    /**
     * Unpins the specified buffer. 
-    * If the buffer's pin count becomes 0,
+    * If the buffer's getBufferToPin count becomes 0,
     * then the threads on the wait list are notified.
     * @param buff the buffer to be unpinned
     */

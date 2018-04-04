@@ -70,6 +70,7 @@ public class Buffer implements Observable {
     * @return the string value at that offset
     */
    public String getString(int offset) {
+      // CS4432-Project1: notify buffer manager about access
       notifyObserver();
       return contents.getString(offset);
    }
@@ -93,6 +94,7 @@ public class Buffer implements Observable {
       if (lsn >= 0)
 	      logSequenceNumber = lsn;
       contents.setInt(offset, val);
+      // CS4432-Project1: notify buffer manager about modification
       notifyObserver();
    }
 
@@ -115,6 +117,7 @@ public class Buffer implements Observable {
       if (lsn >= 0)
 	      logSequenceNumber = lsn;
       contents.setString(offset, val);
+      // CS4432-Project1: notify buffer manager about modification
       notifyObserver();
    }
 
@@ -143,24 +146,26 @@ public class Buffer implements Observable {
    }
 
    /**
-    * Increases the buffer's pin count.
+    * Increases the buffer's getBufferToPin count.
     */
    void pin() {
       pins++;
+      // CS4432-Project1: notify buffer manager about modification
       notifyObserver();
    }
 
    /**
-    * Decreases the buffer's pin count.
+    * Decreases the buffer's getBufferToPin count.
     */
    void unpin() {
       pins--;
+      // CS4432-Project1: notify buffer manager about modification
       notifyObserver();
    }
 
    /**
     * Returns true if the buffer is currently pinned
-    * (that is, if it has a nonzero pin count).
+    * (that is, if it has a nonzero getBufferToPin count).
     * @return true if the buffer is pinned
     */
    boolean isPinned() {

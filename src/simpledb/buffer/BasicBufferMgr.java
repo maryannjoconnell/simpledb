@@ -25,7 +25,7 @@ class BasicBufferMgr implements Observer {
 
    /* TODO merge empty block stuff from this **
 
-       protected synchronized Buffer pinNew(String filename, PageFormatter fmtr) {
+       protected synchronized Buffer getBufferToPinNew(String filename, PageFormatter fmtr) {
         Buffer buff = chooseUnpinnedBuffer();
         if (buff == null)
             return null;
@@ -34,11 +34,11 @@ class BasicBufferMgr implements Observer {
         // CS4432-Project1: add the block to the hashmap
         blockPosition.put(buff.block(), buff); // TODO - migrate this
         numAvailable--;
-        buff.pin();
+        buff.getBufferToPin();
         return buff;
     }
 
-     protected synchronized Buffer pin(Block blk) {
+     protected synchronized Buffer getBufferToPin(Block blk) {
         Buffer buff = findExistingBuffer(blk);
         if (buff == null) {
             buff = chooseUnpinnedBuffer();
@@ -51,7 +51,7 @@ class BasicBufferMgr implements Observer {
         }
         if (!buff.isPinned())
             numAvailable--;
-        buff.pin();
+        buff.getBufferToPin();
         return buff;
     }
 
@@ -59,7 +59,7 @@ class BasicBufferMgr implements Observer {
         // CS4432-Project1: find empty blocks using the above function
         Buffer b = findEmptyBuffer();
         if (b != null) return b;
-        // no empty buffers, begin pin replacement policy
+        // no empty buffers, begin getBufferToPin replacement policy
         for (Buffer buff : bufferpool)
             if (!buff.isPinned())
                 return buff;
@@ -102,6 +102,7 @@ class BasicBufferMgr implements Observer {
       }
 
       policy.getStrategy().initStrategyFields(numbuffs, bufferpool);
+      System.out.println(this.toString());
    }
    
    /**
@@ -125,7 +126,8 @@ class BasicBufferMgr implements Observer {
     */
    synchronized Buffer pin(Block blk) {
       Buffer buff = findExistingBuffer(blk);
-      buff = policy.getStrategy().pin(blk, buff);
+      buff = policy.getStrategy().getBufferToPin(blk, buff);
+      buff.pin();
       System.out.println("Block pinned: " + blk.toString());
       return buff;
    }
@@ -141,7 +143,9 @@ class BasicBufferMgr implements Observer {
     */
    // CS4432-Project1: Access changed from package-private to public to enforce method with interface
    public synchronized Buffer pinNew(String filename, PageFormatter fmtr) {
-      return policy.getStrategy().pinNew(filename, fmtr);
+      Buffer buff =  policy.getStrategy().getBufferToPinNew(filename, fmtr);
+      buff.pin();
+      return buff;
    }
    
    /**
@@ -150,7 +154,8 @@ class BasicBufferMgr implements Observer {
     */
    // CS4432-Project1: Access changed from package-private to public to enforce method with interface
    public synchronized void unpin(Buffer buff) {
-      policy.getStrategy().unpin(buff);
+      buff.unpin();
+      policy.getStrategy().updateAvailable(buff);
    }
    
    /**
@@ -184,7 +189,13 @@ class BasicBufferMgr implements Observer {
 
    private Buffer findExistingBuffer(Block blk) {
       // CS4432-Project1: find blocks from a hashmap
-      return blockPosition.get(blk);
+      //return blockPosition.get(blk);
+      for (Buffer buff : bufferpool) {
+         Block b = buff.block();
+         if (b != null && b.equals(blk))
+            return buff;
+      }
+      return null;
    }
 
    @Override
