@@ -69,6 +69,7 @@ public class AdvancedBufferMgr {
         if (!buff.isPinned())
             numAvailable--;
         buff.pin();
+        System.out.println("Block pinned: " + blk.toString());
         return buff;
     }
 
