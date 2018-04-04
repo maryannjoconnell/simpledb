@@ -17,7 +17,8 @@ the buffer by the policy its entry in the map is removed as well.
 We used the Strategy pattern in order to implement the policies. Now when the
 buffer manager needs to choose an unpinned buffer to replace it calls one of 2
 classes - ClockStrategy or LruStrategy - to determine the buffer to assign a new
-block to. The policy choosed is determined at runtime with an argument.
+block to. The policy chosen is determined at runtime and specified via a command
+line argument.
 
 LruStrategy:
 To facilitate LRU, the Buffer class has a new attribute - lastUsed, which is a
@@ -34,6 +35,7 @@ Like LRU, a new field for Buffer was used, in this case a refBit (technically an
 int). When ClockStrategy chooses a buffer to replace it checks the buffer in its
 current clock hand. If the refbit is 1 it sets it to 0 and moves on to the next
 buffer. If the clock hand is 0 then it returns that buffer to the BasicBufferMgr
-to be replaced. The ref bit of a buffer is set back to 1 if it is accessed, but
-unlike LRU the strategy does not need to be notified because the positioning of
-the buffer does not need to change.
+to be replaced. The ref bit of a buffer is set back to 1 if it is accessed. To
+perform this update, Buffer notifies the observing BasicBufferMgr. This allows
+us to skip setting the ref bit when the lru policy is activated, thereby
+encapsulating strategy specific behavior.
