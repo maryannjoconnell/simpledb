@@ -1,0 +1,39 @@
+1. Efficient finding of empty frame
+An empty frame is defined as a buffer with no block assigned to it (an unpinned
+buffer with a block is handled by the replacement policy). A BitSet within
+BasicBufferMgr keeping track of which buffer is empty was used; when a block is
+pinned to a buffer the buffer's entry in the BitSet is set to 1. When an unpinned
+buffer is requested we get the buffer corresponding to the first 0 in the BitSet,
+if none is found then we begin the replacement policy.
+
+2. Efficient search for a given disk block
+We use a Map (in actuality a ConcurrentHashMap) that maps a block to the buffer
+that it is in. When a block is pinned to a buffer they are added to the Map, and
+when a block needs to be pinned we check in the Map if the block is already on
+the pool, and if not we begin replacement policies. When a block is removed from
+the buffer by the policy its entry in the map is removed as well.
+
+3. Efficient replacement policy
+We used the Strategy pattern in order to implement the policies. Now when the
+buffer manager needs to choose an unpinned buffer to replace it calls one of 2
+classes - ClockStrategy or LruStrategy - to determine the buffer to assign a new
+block to. The policy choosed is determined at runtime with an argument.
+
+LruStrategy:
+To facilitate LRU, the Buffer class has a new attribute - lastUsed, which is a
+timestamp for when the buffer was last accessed. LruStrategy keeps a PriorityQueue
+of buffers sorted by their timestamp, and choose the buffer with the lowest
+timestamp to replace. There's one potential problem however - positioning in a
+PriorityQueue is fixed at insertion, so when a buffer's timestamp changes its
+position is not changed. To rectify this we use the Observer pattern that has
+the buffer notify the BasicBufferMgr of any timestamp changes so the manager can
+rearrange its position in the buffer.
+
+ClockStrategy:
+Like LRU, a new field for Buffer was used, in this case a refBit (technically an
+int). When ClockStrategy chooses a buffer to replace it checks the buffer in its
+current clock hand. If the refbit is 1 it sets it to 0 and moves on to the next
+buffer. If the clock hand is 0 then it returns that buffer to the BasicBufferMgr
+to be replaced. The ref bit of a buffer is set back to 1 if it is accessed, but
+unlike LRU the strategy does not need to be notified because the positioning of
+the buffer does not need to change.
