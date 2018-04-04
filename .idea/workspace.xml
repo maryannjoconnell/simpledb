@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="86855816-d232-4931-acb6-2a46e99c0c25" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/src/simpledb/buffer/BasicBufferMgr.java" afterPath="$PROJECT_DIR$/src/simpledb/buffer/BasicBufferMgr.java" />
-      <change beforePath="$PROJECT_DIR$/src/simpledb/buffer/Buffer.java" afterPath="$PROJECT_DIR$/src/simpledb/buffer/Buffer.java" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change beforePath="$PROJECT_DIR$/Design.txt" afterPath="$PROJECT_DIR$/Design.txt" />
     </list>
     <ignored path="$PROJECT_DIR$/bin/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -15,17 +15,27 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="BasicBufferMgr.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="BasicBufferMgr.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/simpledb/buffer/BasicBufferMgr.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="14">
-              <caret line="133" column="26" lean-forward="true" selection-start-line="133" selection-start-column="26" selection-end-line="133" selection-end-column="26" />
+            <state relative-caret-position="246">
+              <caret line="216" column="12" lean-forward="false" selection-start-line="216" selection-start-column="12" selection-end-line="216" selection-end-column="12" />
               <folding>
                 <element signature="e#6686#6687#0" expanded="true" />
                 <element signature="e#6739#6740#0" expanded="true" />
                 <element signature="e#6790#6791#0" expanded="true" />
                 <element signature="e#6836#6837#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Design.txt" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/Design.txt">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="600">
+              <caret line="40" column="41" lean-forward="true" selection-start-line="40" selection-start-column="41" selection-end-line="40" selection-end-column="41" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -104,16 +114,6 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="StudentMajorNoServer.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/studentClient/simpledb/StudentMajorNoServer.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="240">
-              <caret line="18" column="4" lean-forward="false" selection-start-line="18" selection-start-column="4" selection-end-line="18" selection-end-column="4" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="WarmupTest.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/studentClient/simpledb/WarmupTest.java">
           <provider selected="true" editor-type-id="text-editor">
@@ -171,6 +171,7 @@
         <option value="$PROJECT_DIR$/src/simpledb/buffer/LruStrategy.java" />
         <option value="$PROJECT_DIR$/src/simpledb/buffer/Buffer.java" />
         <option value="$PROJECT_DIR$/src/simpledb/buffer/BasicBufferMgr.java" />
+        <option value="$PROJECT_DIR$/Design.txt" />
       </list>
     </option>
   </component>
@@ -273,6 +274,7 @@
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
+    <property name="SearchEverywhereHistoryKey" value="design.&#9;FILE&#9;file:///Users/maryannoconnell/Developer/Databases/SimpleDB_2.10/Design.txt" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -503,15 +505,16 @@
       <workItem from="1522273056192" duration="79000" />
       <workItem from="1522273453954" duration="57000" />
       <workItem from="1522871412161" duration="149000" />
-      <workItem from="1522871591792" duration="5570000" />
+      <workItem from="1522871591792" duration="6044000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="15429000" />
+    <option name="totallyTimeSpent" value="15903000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="10" y="43" width="1260" height="719" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -521,7 +524,7 @@
       <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.97836167" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.03709428" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -598,14 +601,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/studentClient/simpledb/StudentMajorNoServer.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="18" column="4" lean-forward="false" selection-start-line="18" selection-start-column="4" selection-end-line="18" selection-end-column="4" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/simpledb/server/SimpleDB.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1350">
@@ -1106,14 +1101,22 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/simpledb/buffer/BasicBufferMgr.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="14">
-          <caret line="133" column="26" lean-forward="true" selection-start-line="133" selection-start-column="26" selection-end-line="133" selection-end-column="26" />
+        <state relative-caret-position="246">
+          <caret line="216" column="12" lean-forward="false" selection-start-line="216" selection-start-column="12" selection-end-line="216" selection-end-column="12" />
           <folding>
             <element signature="e#6686#6687#0" expanded="true" />
             <element signature="e#6739#6740#0" expanded="true" />
             <element signature="e#6790#6791#0" expanded="true" />
             <element signature="e#6836#6837#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Design.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="600">
+          <caret line="40" column="41" lean-forward="true" selection-start-line="40" selection-start-column="41" selection-end-line="40" selection-end-column="41" />
+          <folding />
         </state>
       </provider>
     </entry>
