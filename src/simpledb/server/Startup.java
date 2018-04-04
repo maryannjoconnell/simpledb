@@ -6,7 +6,8 @@ import java.rmi.registry.*;
 public class Startup {
    public static void main(String args[]) throws Exception {
       // configure and initialize the database
-      SimpleDB.init(args[0]);
+      // CS4432-Project1: add configuration parameter that specifies which policy is active
+      SimpleDB.init(args[0], args[1]);
       
       // create a registry specific for the server on the default port
       Registry reg = LocateRegistry.createRegistry(1099);

@@ -6,8 +6,6 @@ import simpledb.tx.Transaction;
 import simpledb.log.LogMgr;
 import simpledb.metadata.MetadataMgr;
 import simpledb.planner.*;
-import simpledb.opt.HeuristicQueryPlanner;
-import simpledb.index.planner.IndexUpdatePlanner;
 
 /**
  * The class that provides system-wide static global values.
@@ -30,14 +28,27 @@ public class SimpleDB {
    private static BufferMgr   bm;
    private static LogMgr      logm;
    private static MetadataMgr mdm;
-   
+
    /**
+    * CS4432-Project1: provide backwards compatibility for methods when policy parameter is not specified
     * Initializes the system.
     * This method is called during system startup.
     * @param dirname the name of the database directory
     */
    public static void init(String dirname) {
-      initFileLogAndBufferMgr(dirname);
+      init(dirname, "default");
+   }
+
+   /**
+    * CS4432-Project1: add configuration parameter that specifies which policy is active
+    * Initializes the system.
+    * This method is called during system startup.
+    * @param dirname the name of the database directory
+    * @param replacementPolicy the name of the replacement policy for the buffer manager to use
+    */
+   //
+   public static void init(String dirname, String replacementPolicy) {
+      initFileLogAndBufferMgr(dirname, replacementPolicy);
       Transaction tx = new Transaction();
       boolean isnew = fm.isNew();
       if (isnew)
@@ -49,7 +60,7 @@ public class SimpleDB {
       initMetadataMgr(isnew, tx);
       tx.commit();
    }
-   
+
    // The following initialization methods are useful for 
    // testing the lower-level components of the system 
    // without having to initialize everything.
@@ -72,12 +83,22 @@ public class SimpleDB {
    }
    
    /**
+    * CS4432-Project1: provide backwards compatibility for methods when policy parameter is not specified
     * Initializes the file, log, and buffer managers.
     * @param dirname the name of the database directory
     */
    public static void initFileLogAndBufferMgr(String dirname) {
+      initFileLogAndBufferMgr(dirname, "default");
+   }
+
+   /**
+    * CS4432-Project1: add configuration parameter that specifies which policy is active
+    * Initializes the file, log, and buffer managers.
+    * @param dirname the name of the database directory
+    */
+   public static void initFileLogAndBufferMgr(String dirname, String replacementPolicy) {
       initFileAndLogMgr(dirname);
-      bm = new BufferMgr(BUFFER_SIZE);
+      bm = new BufferMgr(BUFFER_SIZE, replacementPolicy);
    }
    
    /**

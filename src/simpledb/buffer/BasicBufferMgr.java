@@ -4,6 +4,9 @@ import simpledb.file.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static simpledb.buffer.ReplacementPolicy.DEFAULT;
 
@@ -14,11 +17,58 @@ import static simpledb.buffer.ReplacementPolicy.DEFAULT;
  */
 class BasicBufferMgr implements Observer {
    private Buffer[] bufferpool;
+   private BitSet emptyPool;  // CS4432-Project1: TODO comment
+   private Map<Block, Buffer> blockPosition;  // CS4432-Project1: TODO comment
    private ArrayList<Observable> observableList; // CS4432-Project1: List of observable buffers
    private ReplacementPolicy policy; // CS4432-Project1: Replacement policy enum
-   
+
+
+   /* TODO merge empty block stuff from this **
+
+       protected synchronized Buffer pinNew(String filename, PageFormatter fmtr) {
+        Buffer buff = chooseUnpinnedBuffer();
+        if (buff == null)
+            return null;
+        if (buff.block() != null) blockPosition.remove(buff.block()); // TODO - migrate this
+        buff.assignToNew(filename, fmtr);
+        // CS4432-Project1: add the block to the hashmap
+        blockPosition.put(buff.block(), buff); // TODO - migrate this
+        numAvailable--;
+        buff.pin();
+        return buff;
+    }
+
+     protected synchronized Buffer pin(Block blk) {
+        Buffer buff = findExistingBuffer(blk);
+        if (buff == null) {
+            buff = chooseUnpinnedBuffer();
+            if (buff == null)
+                return null;
+            if (buff.block() != null) blockPosition.remove(buff.block()); // TODO - migrate this
+            buff.assignToBlock(blk);
+            // CS4432-Project1: add the block to the hashmap
+            blockPosition.put(blk, buff); // TODO - migrate this
+        }
+        if (!buff.isPinned())
+            numAvailable--;
+        buff.pin();
+        return buff;
+    }
+
+     private Buffer chooseUnpinnedBuffer() {
+        // CS4432-Project1: find empty blocks using the above function
+        Buffer b = findEmptyBuffer();
+        if (b != null) return b;
+        // no empty buffers, begin pin replacement policy
+        for (Buffer buff : bufferpool)
+            if (!buff.isPinned())
+                return buff;
+        return null;
+    }
+    */
+
    /**
-    * CS4432-Project1:
+    * CS4432-Project1: TODO update javadoc
     * Creates a buffer manager having the specified number 
     * of buffer slots.
     * This constructor depends on both the {@link FileMgr} and
@@ -33,6 +83,9 @@ class BasicBufferMgr implements Observer {
     * @param replacementPolicy replacement policy to use
     */
    BasicBufferMgr(int numbuffs, String replacementPolicy) {
+      emptyPool = new BitSet(numbuffs);
+      blockPosition = new ConcurrentHashMap<>();
+
       if (replacementPolicy == null || replacementPolicy.isEmpty()) {
          policy = DEFAULT;
       } else {
@@ -41,6 +94,7 @@ class BasicBufferMgr implements Observer {
       }
 
       bufferpool = new Buffer[numbuffs];
+      observableList = new ArrayList<>(numbuffs);
       for (int i=0; i<numbuffs; i++) {
          Buffer buff = new Buffer(this);
          bufferpool[i] = buff;
@@ -71,7 +125,9 @@ class BasicBufferMgr implements Observer {
     */
    synchronized Buffer pin(Block blk) {
       Buffer buff = findExistingBuffer(blk);
-      return policy.getStrategy().pin(blk, buff);
+      buff = policy.getStrategy().pin(blk, buff);
+      System.out.println("Block pinned: " + blk.toString());
+      return buff;
    }
    
    /**
@@ -109,14 +165,26 @@ class BasicBufferMgr implements Observer {
    public void update(Buffer buff) {
       policy.getStrategy().update(buff);
    }
-   
-   private Buffer findExistingBuffer(Block blk) {
-      for (Buffer buff : bufferpool) {
-         Block b = buff.block();
-         if (b != null && b.equals(blk))
-            return buff;
+
+   /** CS4432-Project1: finds an empty buffer (one with no data)
+    * NOTE: also sets the buffer as non-empty in the bitset because
+    * 1. the functions calling this function does not know (or care) where the buffer is
+    * 2. the functions calling this function WILL use the buffer if this is not good design we can use a hashmap that
+    *    maps a buffer to its index in the pool (which could actually be useful elsewhere)
+    */
+   private synchronized Buffer findEmptyBuffer() {
+      int i = emptyPool.nextClearBit(0);
+      if (i < bufferpool.length) {
+         emptyPool.set(i);
+         return bufferpool[i];
       }
-      return null;
+      else
+         return null;
+   }
+
+   private Buffer findExistingBuffer(Block blk) {
+      // CS4432-Project1: find blocks from a hashmap
+      return blockPosition.get(blk);
    }
 
    @Override
