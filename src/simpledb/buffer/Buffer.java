@@ -233,7 +233,7 @@ public class Buffer implements Observable {
       String refBitStr = refBit >= 0 ? ", refBit=" + refBit : "";
       return "Buffer{" +
             "id=" + this.hashCode() +
-            "blk=" + blk +
+            ", blk=" + blk +
             ", pins=" + pins +
             lastUsedStr +
             refBitStr +

@@ -102,7 +102,9 @@ class BasicBufferMgr implements Observer {
       }
 
       policy.getStrategy().initStrategyFields(numbuffs, bufferpool);
-      System.out.println(this.toString());
+      StringBuffer sb = new StringBuffer();
+      sb.append(policy.getDisplayName()).append(" Policy Activated\n");
+      System.out.println(sb.toString());
    }
    
    /**
@@ -125,6 +127,7 @@ class BasicBufferMgr implements Observer {
     * @return the pinned buffer
     */
    synchronized Buffer pin(Block blk) {
+      System.out.println("PIN block=" + blk.toString());
       Buffer buff = findExistingBuffer(blk);
       if (buff == null) {
          buff = policy.getStrategy().getBufferToPinNew();
@@ -135,7 +138,7 @@ class BasicBufferMgr implements Observer {
          policy.getStrategy().decrementAvailable(buff);
       }
       buff.pin();
-      System.out.println("Block pinned: " + blk.toString());
+      System.out.println(this.toString());
       return buff;
    }
    
@@ -150,12 +153,14 @@ class BasicBufferMgr implements Observer {
     */
    // CS4432-Project1: Access changed from package-private to public to enforce method with interface
    public synchronized Buffer pinNew(String filename, PageFormatter fmtr) {
+      System.out.println("PIN new filename=" + filename);
       Buffer buff =  policy.getStrategy().getBufferToPinNew();
       if (buff == null)
          return null;
       buff.assignToNew(filename, fmtr);
       policy.getStrategy().decrementAvailable(buff);
       buff.pin();
+      System.out.println(this.toString());
       return buff;
    }
    
@@ -165,11 +170,13 @@ class BasicBufferMgr implements Observer {
     */
    // CS4432-Project1: Access changed from package-private to public to enforce method with interface
    public synchronized void unpin(Buffer buff) {
+      System.out.println("UNPIN buff=" + Integer.toString(buff.hashCode()));
       boolean previouslyPinned = buff.isPinned();
       buff.unpin();
       if (previouslyPinned) { // Prevent adjusting count if unpin was called for unpinned block
          policy.getStrategy().incrementAvailable(buff);
       }
+      System.out.println(this.toString());
    }
    
    /**
@@ -214,9 +221,12 @@ class BasicBufferMgr implements Observer {
 
    @Override
    public String toString() {
-      return "BasicBufferMgr{" +
-            "bufferpool=" + Arrays.toString(bufferpool) +
-            ", policy=" + policy.getDisplayName() +
-            '}';
+      StringBuffer sb = new StringBuffer("BasicBufferMgr {\n");
+      sb.append("bufferpool:\n");
+      for(Buffer b : bufferpool) {
+         sb.append("==> ").append(b.toString()).append("\n");
+      }
+      sb.append("}");
+      return sb.toString();
    }
 }
