@@ -6,9 +6,9 @@ import simpledb.file.Block;
  * CS4432-Project1: Interface containing methods used by BasicBufferMgr that across policies
  * */
 interface ReplacementStrategy {
-   Buffer getBufferToPin(Block blk, Buffer buff);
-   Buffer getBufferToPinNew(String filename, PageFormatter fmtr);
-   void updateAvailable(Buffer buff);
+   Buffer getBufferToPinNew();
+   void incrementAvailable(Buffer buff);
+   void decrementAvailable(Buffer buff);
    int available();
    // Used to initialize fields required for policy
    void initStrategyFields(int numbuffs, Buffer[] bufferpool);

@@ -126,7 +126,14 @@ class BasicBufferMgr implements Observer {
     */
    synchronized Buffer pin(Block blk) {
       Buffer buff = findExistingBuffer(blk);
-      buff = policy.getStrategy().getBufferToPin(blk, buff);
+      if (buff == null) {
+         buff = policy.getStrategy().getBufferToPinNew();
+         if (buff == null)
+            return null;
+         buff.assignToBlock(blk);
+         // Block was previously available so adjust count
+         policy.getStrategy().decrementAvailable(buff);
+      }
       buff.pin();
       System.out.println("Block pinned: " + blk.toString());
       return buff;
@@ -143,7 +150,11 @@ class BasicBufferMgr implements Observer {
     */
    // CS4432-Project1: Access changed from package-private to public to enforce method with interface
    public synchronized Buffer pinNew(String filename, PageFormatter fmtr) {
-      Buffer buff =  policy.getStrategy().getBufferToPinNew(filename, fmtr);
+      Buffer buff =  policy.getStrategy().getBufferToPinNew();
+      if (buff == null)
+         return null;
+      buff.assignToNew(filename, fmtr);
+      policy.getStrategy().decrementAvailable(buff);
       buff.pin();
       return buff;
    }
@@ -154,8 +165,11 @@ class BasicBufferMgr implements Observer {
     */
    // CS4432-Project1: Access changed from package-private to public to enforce method with interface
    public synchronized void unpin(Buffer buff) {
+      boolean previouslyPinned = buff.isPinned();
       buff.unpin();
-      policy.getStrategy().updateAvailable(buff);
+      if (previouslyPinned) { // Prevent adjusting count if unpin was called for unpinned block
+         policy.getStrategy().incrementAvailable(buff);
+      }
    }
    
    /**

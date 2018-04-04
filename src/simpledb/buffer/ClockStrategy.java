@@ -7,32 +7,16 @@ public class ClockStrategy implements ReplacementStrategy {
    private Buffer[] bufferpool_copy; // CS4432-Project1:
    private int numAvailable;
 
-   public Buffer getBufferToPin(Block blk, Buffer buff) {
-      if (buff == null) {
-         buff = chooseUnpinnedBuffer();
-         if (buff == null)
-            return null;
-         buff.assignToBlock(blk);
-      }
-      if (!buff.isPinned())
-         numAvailable--;
-      buff.pin();
-      return buff;
+   public Buffer getBufferToPinNew() {
+     return chooseUnpinnedBuffer();
    }
 
-   public Buffer getBufferToPinNew(String filename, PageFormatter fmtr) {
-      Buffer buff = chooseUnpinnedBuffer();
-      if (buff == null)
-         return null;
-      buff.assignToNew(filename, fmtr);
+   public void incrementAvailable(Buffer buff) {
+      numAvailable++;
+   }
+
+   public void decrementAvailable(Buffer buff) {
       numAvailable--;
-      buff.pin();
-      return buff;
-   }
-
-   public void updateAvailable(Buffer buff) {
-      if (!buff.isPinned())
-         numAvailable++;
    }
 
    public int available() {

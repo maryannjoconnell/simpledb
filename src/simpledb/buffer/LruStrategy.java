@@ -14,45 +14,18 @@ class LruStrategy implements ReplacementStrategy {
    private PriorityQueue<Buffer> unpinnedBufferPool;
 
    /**
-    * Pins a buffer to the specified block.
-    * If there is already a buffer assigned to that block
-    * then that buffer is used;
-    * otherwise, an unpinned buffer from the pool is chosen.
-    * Returns a null value if there are no available buffers.
-    * @param buff buffer assigned to block or null if no buffer is currently assigned
-    * @param blk a reference to a disk block
-    * @return the pinned buffer
+    * CS4432-Project1:  Get least recently used unpinned buffer and remove from queue
+    * @return
     */
-   public synchronized Buffer getBufferToPin(Block blk, Buffer buff) {
-      if (buff == null) {
-         // CS4432-Project1: Get least recently used unpinned buffer and remove from queue
-         buff = unpinnedBufferPool.poll();
-         if (buff == null)
-            return null;
-         buff.assignToBlock(blk);
-      }
-      return buff;
+   public synchronized Buffer getBufferToPinNew() {
+      return unpinnedBufferPool.poll();
    }
 
-   /**
-    * Allocates a new block in the specified file, and
-    * pins a buffer to it.
-    * Returns null (without allocating the block) if
-    * there are no available buffers.
-    * @param filename the name of the file
-    * @param fmtr a pageformatter object, used to format the new block
-    * @return the pinned buffer
-    */
-   public synchronized Buffer getBufferToPinNew(String filename, PageFormatter fmtr) {
-      // CS4432-Project1: Get least recently used unpinned buffer and remove from queue
-      Buffer buff = unpinnedBufferPool.poll();
-      if (buff == null)
-         return null;
-      buff.assignToNew(filename, fmtr);
-      return buff;
+   public synchronized void incrementAvailable(Buffer buff) {
+      // CS4432-Project1: Do nothing; number of unpinned buffers is tracked by priority queue
    }
 
-   public synchronized void updateAvailable(Buffer buff) {
+   public synchronized void decrementAvailable(Buffer buff) {
       // CS4432-Project1: Do nothing; number of unpinned buffers is tracked by priority queue
    }
 
