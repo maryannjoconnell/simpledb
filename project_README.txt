@@ -7,7 +7,7 @@ Installation:
 it is opened there.
 - To run, run src/simpledb/server/Startup class. You must first set up run
  configurations however; the server takes 2 arguments:
-    the folder under home directory to put the database
+    the folder name under the home directory to put the database
     the replacement strategy to use, "clock" or "lru" (no quotes).
 - Next, you can run SQL clients under studentClient/simpledb/ to begin performing
 SQL queries.

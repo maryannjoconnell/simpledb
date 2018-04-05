@@ -1,0 +1,201 @@
+In order to test the correctness of our code we use two programs:
+- WarmupTest; consisting of simple select SQL queries (commands listed information in Examples.sql)
+- BufferTest; containing heavy SQL insertion and selection, intended to test the
+buffer replacement policies (and as such uses a large number of very simple,
+one entry tables to maximize the number of blocks required)
+
+To test the correctness of our system we simply used WarmupTest and verify the results of the select
+statements are correct.
+
+Other than that we included several printing and toString() methods within the code
+to print the buffer pool and its full content after every pinning and unpinning action.
+Using the log printed to output we can then verify the algorithm's behavior.
+
+Consider the following segment of info from the server's output:
+***************
+BasicBufferMgr {
+bufferpool:
+==> Buffer{id=159413332, blk=[file tblcat.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:09.736Z}
+==> Buffer{id=1028214719, blk=[file fldcat.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:09.737Z}
+==> Buffer{id=500977346, blk=[file fldcat.tbl, block 1], pins=0, lastUsed=2018-04-04T22:46:09.738Z}
+==> Buffer{id=20132171, blk=[file fldcat.tbl, block 2], pins=0, lastUsed=2018-04-04T22:46:09.738Z}
+==> Buffer{id=186370029, blk=[file fldcat.tbl, block 3], pins=0, lastUsed=2018-04-04T22:46:09.739Z}
+==> Buffer{id=2094548358, blk=null, pins=0, lastUsed=2018-04-04T22:44:17.046Z}
+==> Buffer{id=51228289, blk=null, pins=0, lastUsed=2018-04-04T22:44:17.046Z}
+==> Buffer{id=455896770, blk=null, pins=0, lastUsed=2018-04-04T22:44:17.046Z}
+}
+PIN new filename=table1.tbl
+BasicBufferMgr {
+bufferpool:
+==> Buffer{id=159413332, blk=[file tblcat.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:09.736Z}
+==> Buffer{id=1028214719, blk=[file fldcat.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:09.737Z}
+==> Buffer{id=500977346, blk=[file fldcat.tbl, block 1], pins=0, lastUsed=2018-04-04T22:46:09.738Z}
+==> Buffer{id=20132171, blk=[file fldcat.tbl, block 2], pins=0, lastUsed=2018-04-04T22:46:09.738Z}
+==> Buffer{id=186370029, blk=[file fldcat.tbl, block 3], pins=0, lastUsed=2018-04-04T22:46:09.739Z}
+==> Buffer{id=2094548358, blk=[file table1.tbl, block 0], pins=1, lastUsed=2018-04-04T22:46:09.790Z}
+==> Buffer{id=51228289, blk=null, pins=0, lastUsed=2018-04-04T22:44:17.046Z}
+==> Buffer{id=455896770, blk=null, pins=0, lastUsed=2018-04-04T22:44:17.046Z}
+}
+***************
+We can verify that when the server wants to pin table1.tbl it finds the next empty frame (blk=null)
+and pin it to it (pins=1).
+Now, what if the block already exists in the buffer?
+***************
+BasicBufferMgr {
+bufferpool:
+==> Buffer{id=159413332, blk=[file tblcat.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:09.736Z}
+==> Buffer{id=1028214719, blk=[file fldcat.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:09.737Z}
+==> Buffer{id=500977346, blk=[file fldcat.tbl, block 1], pins=0, lastUsed=2018-04-04T22:46:09.738Z}
+==> Buffer{id=20132171, blk=[file fldcat.tbl, block 2], pins=0, lastUsed=2018-04-04T22:46:09.738Z}
+==> Buffer{id=186370029, blk=[file fldcat.tbl, block 3], pins=0, lastUsed=2018-04-04T22:46:09.739Z}
+==> Buffer{id=2094548358, blk=[file table1.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:09.790Z}
+==> Buffer{id=51228289, blk=null, pins=0, lastUsed=2018-04-04T22:44:17.046Z}
+==> Buffer{id=455896770, blk=null, pins=0, lastUsed=2018-04-04T22:44:17.046Z}
+}
+PIN block=[file table1.tbl, block 0]
+BasicBufferMgr {
+bufferpool:
+==> Buffer{id=159413332, blk=[file tblcat.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:09.736Z}
+==> Buffer{id=1028214719, blk=[file fldcat.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:09.737Z}
+==> Buffer{id=500977346, blk=[file fldcat.tbl, block 1], pins=0, lastUsed=2018-04-04T22:46:09.738Z}
+==> Buffer{id=20132171, blk=[file fldcat.tbl, block 2], pins=0, lastUsed=2018-04-04T22:46:09.738Z}
+==> Buffer{id=186370029, blk=[file fldcat.tbl, block 3], pins=0, lastUsed=2018-04-04T22:46:09.739Z}
+==> Buffer{id=2094548358, blk=[file table1.tbl, block 0], pins=1, lastUsed=2018-04-04T22:46:09.790Z}
+==> Buffer{id=51228289, blk=null, pins=0, lastUsed=2018-04-04T22:44:17.046Z}
+==> Buffer{id=455896770, blk=null, pins=0, lastUsed=2018-04-04T22:44:17.046Z}
+}
+***************
+We see that the buffer's pin count gets incremented, and the buffer pool's content otherwise does not change.
+
+Next, buffer replacement policies. For LRU each blocks get a lastUsed timestamp (as seen above), and LRU
+is supposed to take out the oldest one. Let's verify with some sample output:
+***************
+BasicBufferMgr {
+bufferpool:
+==> Buffer{id=159413332, blk=[file tblcat.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:10.283Z}
+==> Buffer{id=1028214719, blk=[file fldcat.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:10.283Z}
+==> Buffer{id=500977346, blk=[file fldcat.tbl, block 1], pins=0, lastUsed=2018-04-04T22:46:10.283Z}
+==> Buffer{id=20132171, blk=[file fldcat.tbl, block 2], pins=0, lastUsed=2018-04-04T22:46:10.283Z}
+==> Buffer{id=186370029, blk=[file fldcat.tbl, block 3], pins=0, lastUsed=2018-04-04T22:46:10.283Z}
+==> Buffer{id=2094548358, blk=[file table1.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:09.793Z}
+==> Buffer{id=51228289, blk=[file table2.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:09.999Z}
+==> Buffer{id=455896770, blk=[file table3.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:10.134Z}
+}
+PIN new filename=table4.tbl
+BasicBufferMgr {
+bufferpool:
+==> Buffer{id=159413332, blk=[file tblcat.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:10.283Z}
+==> Buffer{id=1028214719, blk=[file fldcat.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:10.283Z}
+==> Buffer{id=500977346, blk=[file fldcat.tbl, block 1], pins=0, lastUsed=2018-04-04T22:46:10.283Z}
+==> Buffer{id=20132171, blk=[file fldcat.tbl, block 2], pins=0, lastUsed=2018-04-04T22:46:10.283Z}
+==> Buffer{id=186370029, blk=[file fldcat.tbl, block 3], pins=0, lastUsed=2018-04-04T22:46:10.283Z}
+==> Buffer{id=2094548358, blk=[file table4.tbl, block 0], pins=1, lastUsed=2018-04-04T22:46:10.341Z}
+==> Buffer{id=51228289, blk=[file table2.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:09.999Z}
+==> Buffer{id=455896770, blk=[file table3.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:10.134Z}
+}
+***************
+We need to pin table4.tbl, but the pool is full. Looking at the timestamp we see that
+table1.tbl block 0 is the oldest and should be taken out, and that's indeed what happened.
+***************
+BasicBufferMgr {
+bufferpool:
+==> Buffer{id=159413332, blk=[file tblcat.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:10.415Z}
+==> Buffer{id=1028214719, blk=[file fldcat.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:10.415Z}
+==> Buffer{id=500977346, blk=[file fldcat.tbl, block 1], pins=0, lastUsed=2018-04-04T22:46:10.415Z}
+==> Buffer{id=20132171, blk=[file fldcat.tbl, block 2], pins=0, lastUsed=2018-04-04T22:46:10.416Z}
+==> Buffer{id=186370029, blk=[file fldcat.tbl, block 3], pins=0, lastUsed=2018-04-04T22:46:10.416Z}
+==> Buffer{id=2094548358, blk=[file table4.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:10.341Z}
+==> Buffer{id=51228289, blk=[file table2.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:09.999Z}
+==> Buffer{id=455896770, blk=[file table3.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:10.134Z}
+}
+PIN new filename=table5.tbl
+BasicBufferMgr {
+bufferpool:
+==> Buffer{id=159413332, blk=[file tblcat.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:10.415Z}
+==> Buffer{id=1028214719, blk=[file fldcat.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:10.415Z}
+==> Buffer{id=500977346, blk=[file fldcat.tbl, block 1], pins=0, lastUsed=2018-04-04T22:46:10.415Z}
+==> Buffer{id=20132171, blk=[file fldcat.tbl, block 2], pins=0, lastUsed=2018-04-04T22:46:10.416Z}
+==> Buffer{id=186370029, blk=[file fldcat.tbl, block 3], pins=0, lastUsed=2018-04-04T22:46:10.416Z}
+==> Buffer{id=2094548358, blk=[file table4.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:10.341Z}
+==> Buffer{id=51228289, blk=[file table5.tbl, block 0], pins=1, lastUsed=2018-04-04T22:46:10.464Z}
+==> Buffer{id=455896770, blk=[file table3.tbl, block 0], pins=0, lastUsed=2018-04-04T22:46:10.134Z}
+}
+***************
+Next we need to pin table5.tbl, and we see that table2.tbl block 0 is now the oldest and should be taken out.
+Now, to test Clock replacement policy. Once again we can walk through the server's output to verify correctness.
+Let's verify some sample output again, this time same as above - table4.tbl needs to be pinned, but the pool is full
+(for Clock replacement we add some extra output, such as position of clock hand and the hand's journey):
+***************
+BasicBufferMgr {
+bufferpool:
+==> Buffer{id=2129789493, blk=[file tblcat.tbl, block 0], pins=0, refBit=1}
+==> Buffer{id=668386784, blk=[file fldcat.tbl, block 0], pins=0, refBit=1}
+==> Buffer{id=1329552164, blk=[file fldcat.tbl, block 1], pins=0, refBit=1}
+==> Buffer{id=363771819, blk=[file fldcat.tbl, block 2], pins=0, refBit=1}
+==> Buffer{id=2065951873, blk=[file fldcat.tbl, block 3], pins=0, refBit=1}
+==> Buffer{id=1791741888, blk=[file table1.tbl, block 0], pins=0, refBit=1}
+==> Buffer{id=1595428806, blk=[file table2.tbl, block 0], pins=0, refBit=1}
+==> Buffer{id=1072408673, blk=[file table3.tbl, block 0], pins=0, refBit=1}
+}
+hand: 0
+PIN new filename=table4.tbl
+Setting ref to 0: 0 Buffer{id=2129789493, blk=[file tblcat.tbl, block 0], pins=0, refBit=0}
+Setting ref to 0: 1 Buffer{id=668386784, blk=[file fldcat.tbl, block 0], pins=0, refBit=0}
+Setting ref to 0: 2 Buffer{id=1329552164, blk=[file fldcat.tbl, block 1], pins=0, refBit=0}
+Setting ref to 0: 3 Buffer{id=363771819, blk=[file fldcat.tbl, block 2], pins=0, refBit=0}
+Setting ref to 0: 4 Buffer{id=2065951873, blk=[file fldcat.tbl, block 3], pins=0, refBit=0}
+Setting ref to 0: 5 Buffer{id=1791741888, blk=[file table1.tbl, block 0], pins=0, refBit=0}
+Setting ref to 0: 6 Buffer{id=1595428806, blk=[file table2.tbl, block 0], pins=0, refBit=0}
+Setting ref to 0: 7 Buffer{id=1072408673, blk=[file table3.tbl, block 0], pins=0, refBit=0}
+Found ref = 0: 0 Buffer{id=2129789493, blk=[file tblcat.tbl, block 0], pins=0, refBit=0}
+BasicBufferMgr {
+bufferpool:
+==> Buffer{id=2129789493, blk=[file table4.tbl, block 0], pins=1, refBit=1}
+==> Buffer{id=668386784, blk=[file fldcat.tbl, block 0], pins=0, refBit=0}
+==> Buffer{id=1329552164, blk=[file fldcat.tbl, block 1], pins=0, refBit=0}
+==> Buffer{id=363771819, blk=[file fldcat.tbl, block 2], pins=0, refBit=0}
+==> Buffer{id=2065951873, blk=[file fldcat.tbl, block 3], pins=0, refBit=0}
+==> Buffer{id=1791741888, blk=[file table1.tbl, block 0], pins=0, refBit=0}
+==> Buffer{id=1595428806, blk=[file table2.tbl, block 0], pins=0, refBit=0}
+==> Buffer{id=1072408673, blk=[file table3.tbl, block 0], pins=0, refBit=0}
+}
+hand: 1
+***************
+We see that since all refBits are 1 it essentially takes a tour of the buffer pool, setting all refbits to 0
+before replacing the first buffer.
+Now, let's consider a more general case:
+***************
+BasicBufferMgr {
+bufferpool:
+==> Buffer{id=2129789493, blk=[file table1.tbl, block 0], pins=1, refBit=1}
+==> Buffer{id=668386784, blk=[file tblcat.tbl, block 0], pins=0, refBit=1}
+==> Buffer{id=1329552164, blk=[file fldcat.tbl, block 0], pins=0, refBit=1}
+==> Buffer{id=363771819, blk=[file fldcat.tbl, block 1], pins=0, refBit=1}
+==> Buffer{id=2065951873, blk=[file fldcat.tbl, block 2], pins=0, refBit=1}
+==> Buffer{id=1791741888, blk=[file fldcat.tbl, block 3], pins=0, refBit=1}
+==> Buffer{id=1595428806, blk=[file table5.tbl, block 0], pins=0, refBit=0}
+==> Buffer{id=1072408673, blk=[file viewcat.tbl, block 0], pins=0, refBit=1}
+}
+hand: 1
+PIN block=[file table2.tbl, block 0]
+Setting ref to 0: 1 Buffer{id=668386784, blk=[file tblcat.tbl, block 0], pins=0, refBit=0}
+Setting ref to 0: 2 Buffer{id=1329552164, blk=[file fldcat.tbl, block 0], pins=0, refBit=0}
+Setting ref to 0: 3 Buffer{id=363771819, blk=[file fldcat.tbl, block 1], pins=0, refBit=0}
+Setting ref to 0: 4 Buffer{id=2065951873, blk=[file fldcat.tbl, block 2], pins=0, refBit=0}
+Setting ref to 0: 5 Buffer{id=1791741888, blk=[file fldcat.tbl, block 3], pins=0, refBit=0}
+Found ref = 0: 6 Buffer{id=1595428806, blk=[file table5.tbl, block 0], pins=0, refBit=0}
+BasicBufferMgr {
+bufferpool:
+==> Buffer{id=2129789493, blk=[file table1.tbl, block 0], pins=1, refBit=1}
+==> Buffer{id=668386784, blk=[file tblcat.tbl, block 0], pins=0, refBit=0}
+==> Buffer{id=1329552164, blk=[file fldcat.tbl, block 0], pins=0, refBit=0}
+==> Buffer{id=363771819, blk=[file fldcat.tbl, block 1], pins=0, refBit=0}
+==> Buffer{id=2065951873, blk=[file fldcat.tbl, block 2], pins=0, refBit=0}
+==> Buffer{id=1791741888, blk=[file fldcat.tbl, block 3], pins=0, refBit=0}
+==> Buffer{id=1595428806, blk=[file table2.tbl, block 0], pins=1, refBit=1}
+==> Buffer{id=1072408673, blk=[file viewcat.tbl, block 0], pins=0, refBit=1}
+}
+hand: 7
+***************
+We need to pin table2.tbl, clock hand is at 1, so it marches from 1 to 6, setting refBits to 0 on the way,
+before finding buffer 6 to have refBit already be 0. Buffer 6 then is chosen to be replaced.

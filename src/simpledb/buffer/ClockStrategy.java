@@ -1,5 +1,8 @@
 package simpledb.buffer;
 
+/**
+ * CS4432-Project1: Manages the pinning and unpinning of buffers to blocks using the clock replacement policy.
+ */
 import simpledb.file.Block;
 
 public class ClockStrategy implements ReplacementStrategy {
@@ -54,11 +57,14 @@ public class ClockStrategy implements ReplacementStrategy {
          if (!bufferpool_copy[hand].isPinned()) {
             if (bufferpool_copy[hand].getRefBit() == 0) {
                // increment clock hand before returning unpinned buffer
+               System.out.println("Found ref = 0: " + hand + " " + bufferpool_copy[hand].toString());
+               int old_hand = hand;
                hand++;
-               return (bufferpool_copy[hand]);
+               return (bufferpool_copy[old_hand]);
             } else {
                // Set reference bit to 0
                bufferpool_copy[hand].setRefBit(0);
+               System.out.println("Setting ref to 0: " + hand + " " + bufferpool_copy[hand].toString());
             }
          }
          hand++;
@@ -66,4 +72,6 @@ public class ClockStrategy implements ReplacementStrategy {
 
       return null;
    }
+
+   public String toString() { return "hand: " + hand; };
 }

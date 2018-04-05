@@ -68,4 +68,5 @@ class LruStrategy implements ReplacementStrategy {
          }
       }
    }
+   public String toString() { return ""; };
 }

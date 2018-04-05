@@ -1,3 +1,6 @@
+Most of our code addition is within the buffer package of simpledb, a majority of
+which is in BasicBufferMgr.
+
 1. Efficient finding of empty frame
 An empty frame is defined as a buffer with no block assigned to it (an unpinned
 buffer with a block is handled by the replacement policy). A BitSet within

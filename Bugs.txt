@@ -1,0 +1,7 @@
+There's one major bug: If the server is (forcefully) shutdown for some reason (to switch
+the replacement policy for example), then on its next startup the server will
+be unable to recover the database and will crash. This does not seem to be something
+that is part of our addition and as such unfortunately it's hard to debug. It should
+not however interfere with correctness; as a workaround the server's database folder
+shold be completely wiped clean every start up. The tests are also fairly self-contained
+as a result; they will do all the necessary table creation.
